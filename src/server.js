@@ -5,8 +5,8 @@ require('dotenv').config();
 const connectDB = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const {protect} = require('./middleware/authMiddleware');
-const { restrictTo } = require('./middleware/roleMiddleware');
-
+const { authorizeRoles } = require('./middleware/roleMiddleware');
+const assignmentRoutes = require('./routes/assignmentRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,6 +18,9 @@ app.use(express.json());
 
 // Authentication routes 
 app.use('/api/auth', authRoutes);
+
+// Assignment routes auth 
+app.use('/api/assignments', assignmentRoutes);
 
 //Api health
 app.get('/api/health',(req,res)=>{
@@ -36,7 +39,7 @@ app.get('/api/protected',protect, (req,res)=>{
     });
 });
 
-app.get('/api/admin-only',protect, restrictTo('admin'),(req,res)=>{
+app.get('/api/admin-only',protect, authorizeRoles('admin'),(req,res)=>{
     res.json({
         success: true,
         message: 'Admin access confirmed.',
