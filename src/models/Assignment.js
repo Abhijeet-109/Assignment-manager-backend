@@ -38,7 +38,7 @@ const assignmentSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: ['active','closed'],
-            default: 'active',
+            default: 'active',  
         },
 
     },

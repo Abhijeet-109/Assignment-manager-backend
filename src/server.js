@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoutes');
 const {protect} = require('./middleware/authMiddleware');
 const { authorizeRoles } = require('./middleware/roleMiddleware');
 const assignmentRoutes = require('./routes/assignmentRoutes');
+const submissionRoutes = require('./routes/submissionRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -21,6 +22,10 @@ app.use('/api/auth', authRoutes);
 
 // Assignment routes auth 
 app.use('/api/assignments', assignmentRoutes);
+
+// Submission routes 
+app.use('/api/submissions', submissionRoutes);
+
 
 //Api health
 app.get('/api/health',(req,res)=>{
@@ -48,7 +53,7 @@ app.get('/api/admin-only',protect, authorizeRoles('admin'),(req,res)=>{
 
 //Error 404 Handling block 
 app.use((req,res)=>{
-    res.status(400).json({
+    res.status(404).json({
         success: false,
         message: 'Routing not found',
     });
