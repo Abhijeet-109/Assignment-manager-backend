@@ -8,6 +8,7 @@ const {protect} = require('./middleware/authMiddleware');
 const { authorizeRoles } = require('./middleware/roleMiddleware');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const submissionRoutes = require('./routes/submissionRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +26,9 @@ app.use('/api/assignments', assignmentRoutes);
 
 // Submission routes 
 app.use('/api/submissions', submissionRoutes);
+
+// Notification routes 
+app.use('/api/notifications', notificationRoutes);
 
 
 //Api health
