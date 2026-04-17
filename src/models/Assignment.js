@@ -35,6 +35,14 @@ const assignmentSchema = new mongoose.Schema(
             required: true,
         }],
 
+        // New changes for grade field 
+
+        maxMarks: {
+            type: Number,
+            required: [true, 'Max marks are required '],
+            min: 1,
+        },
+
         status: {
             type: String,
             enum: ['active','closed'],

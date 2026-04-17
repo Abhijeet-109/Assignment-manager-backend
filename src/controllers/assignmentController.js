@@ -3,7 +3,7 @@ const Assignment = require('../models/Assignment');
 // 1. Creating the assignment for Teacher Only 
 const createAssignment = async (req,res) =>{
     try {
-        const { title, description, subject, dueDate, assignedTo } = req.body;
+        const { title, description, subject, dueDate, assignedTo, maxMarks} = req.body;
 
         const assignment = await Assignment.create(
             {
@@ -13,6 +13,7 @@ const createAssignment = async (req,res) =>{
                 dueDate,
                 assignedTo,
                 createdBy: req.user._id,
+                maxMarks,
             }
         );
 
