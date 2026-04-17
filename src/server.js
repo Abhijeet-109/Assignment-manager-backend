@@ -9,6 +9,7 @@ const { authorizeRoles } = require('./middleware/roleMiddleware');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const submissionRoutes = require('./routes/submissionRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const subjectRoutes = require('./routes/subjectRoutes')
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -17,6 +18,9 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+
+
+/*-----------------------------------All Routes and api----------------------------------  */
 
 // Authentication routes 
 app.use('/api/auth', authRoutes);
@@ -29,6 +33,13 @@ app.use('/api/submissions', submissionRoutes);
 
 // Notification routes 
 app.use('/api/notifications', notificationRoutes);
+
+//Subject routes
+app.use('/api/subjects',subjectRoutes);
+
+
+
+/*----------------------------------Api routes ends----------------------------------------- */
 
 
 //Api health

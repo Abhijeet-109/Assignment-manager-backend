@@ -14,7 +14,8 @@ const assignmentSchema = new mongoose.Schema(
         },
 
         subject: {
-            type: String,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Subject',
             required: [true,'Subject is required'],
         },
 
