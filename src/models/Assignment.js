@@ -30,12 +30,6 @@ const assignmentSchema = new mongoose.Schema(
             required: true,
         },
 
-        assignedTo: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-            required: true,
-        }],
-
         // New changes for grade field 
 
         maxMarks: {

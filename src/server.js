@@ -12,6 +12,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
+const studentAssignmentRoutes = require('./routes/studentAssignmentRoutes');
 
 
 const app = express();
@@ -44,7 +45,10 @@ app.use('/api/subjects', subjectRoutes);
 app.use('/api/student', studentRoutes);
 
 // Teacher routes
-app.use('/api/teacher', teacherRoutes)
+app.use('/api/teacher', teacherRoutes);
+
+// Student Assignment Junction routes 
+app.use('/api/student-assignments', studentAssignmentRoutes);
 
 
 

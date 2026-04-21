@@ -3,7 +3,7 @@ const Assignment = require('../models/Assignment');
 // 1. Creating the assignment for Teacher Only 
 const createAssignment = async (req,res) =>{
     try {
-        const { title, description, subject, dueDate, assignedTo, maxMarks} = req.body;
+        const { title, description, subject, dueDate, maxMarks} = req.body;
 
         const assignment = await Assignment.create(
             {
@@ -11,7 +11,6 @@ const createAssignment = async (req,res) =>{
                 description,
                 subject,
                 dueDate,
-                assignedTo,
                 createdBy: req.user._id,
                 maxMarks,
             }
@@ -51,26 +50,30 @@ const getAllAssignment = async (req,res) => {
     }   
 };
 
+
+// After creating new file Named studetnAssignment junction 
+// we do not need explicite function to assign assignment to student while creating the assignment 
+
 // 3. Get my Assignment - Student Only
 
-const getMyAssignment = async (req,res) => {
-    try{
-        const assignments = await Assignment.find({
-            assignedTo: req.user._id,
-        });
+// const getMyAssignment = async (req,res) => {
+//     try{
+//         const assignments = await Assignment.find({
+//             assignedTo: req.user._id,
+//         });
 
-        return res.status(200).json({
-            success: true,
-            count: assignments.length,
-            data: assignments,
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }  
-};
+//         return res.status(200).json({
+//             success: true,
+//             count: assignments.length,
+//             data: assignments,
+//         });
+//     } catch (error) {
+//         res.status(500).json({
+//             success: false,
+//             message: error.message,
+//         });
+//     }  
+// };
 
 // 4 Update Assignment - Teacher only ( with own assignmets only )
 
@@ -150,7 +153,8 @@ const deleteAssignment = async(req,res)=>{
 module.exports = { 
     createAssignment,
     getAllAssignment,
-    getMyAssignment,
     updateAssignmet,
     deleteAssignment,
 };
+
+// getMyAssignment,

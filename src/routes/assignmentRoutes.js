@@ -6,7 +6,7 @@ const { authorizeRoles } = require('../middleware/roleMiddleware');
 const {
         createAssignment,
         getAllAssignment,
-        getMyAssignment,
+        //getMyAssignment,
         updateAssignmet,
         deleteAssignment
 } = require('../controllers/assignmentController');
@@ -17,8 +17,8 @@ router.post('/',protect, authorizeRoles('teacher'), createAssignment);
 // Admin views all assignment API get method 
 router.get('/',protect, authorizeRoles('admin'),getAllAssignment);
 
-// Student view their assignment 
-router.get('/my',protect, authorizeRoles('student'),getMyAssignment);
+// // Student view their assignment 
+// router.get('/my',protect, authorizeRoles('student'),getMyAssignment);
 
 // teacher updates their assignments
 router.put('/:id',protect, authorizeRoles('teacher'),updateAssignmet);
