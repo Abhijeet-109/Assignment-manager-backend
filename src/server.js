@@ -13,6 +13,8 @@ const subjectRoutes = require('./routes/subjectRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const studentAssignmentRoutes = require('./routes/studentAssignmentRoutes');
+const selfUploadRoutes = require('./routes/selfUploadRoutes');
+const exportRoutes = require('./routes/exportRoutes');
 
 
 const app = express();
@@ -49,6 +51,14 @@ app.use('/api/teacher', teacherRoutes);
 
 // Student Assignment Junction routes 
 app.use('/api/student-assignments', studentAssignmentRoutes);
+
+// CSV Exporting routes 
+app.use('/api/export',exportRoutes);
+
+// Self-Uploads Routes for student-only Access
+app.use('/api/self-uploads', selfUploadRoutes);
+
+
 
 
 
