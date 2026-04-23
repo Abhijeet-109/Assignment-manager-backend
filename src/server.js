@@ -15,6 +15,7 @@ const teacherRoutes = require('./routes/teacherRoutes');
 const studentAssignmentRoutes = require('./routes/studentAssignmentRoutes');
 const selfUploadRoutes = require('./routes/selfUploadRoutes');
 const exportRoutes = require('./routes/exportRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 
 const app = express();
@@ -58,8 +59,8 @@ app.use('/api/export',exportRoutes);
 // Self-Uploads Routes for student-only Access
 app.use('/api/self-uploads', selfUploadRoutes);
 
-
-
+// Dashboard routes for all 3 users 
+app.use('/api/dashboard', dashboardRoutes);
 
 
 /*----------------------------------Rest API routes ends----------------------------------------- */
