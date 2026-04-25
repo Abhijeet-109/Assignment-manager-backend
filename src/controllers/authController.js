@@ -33,15 +33,18 @@ const signup = async (req, res) => {
         });
 
         //4. Generate Token 
-        const token = generateToken(user._id, user.role);
+        const token = generateToken(user._id, user.role, user.tokenVersion);
 
         //5. Respond - never include password
+        // New data frames 
         res.status(201).json({
             success: true,
             message: 'Account created successfully.',
             data: {
-                token: {
-                    _id: user._id, firstName: user.firstName,
+                token,
+                user: {
+                    _id: user._id,
+                    firstName: user.firstName,
                     lastName: user.lastName,
                     email: user.email,
                     role: user.role,
@@ -57,7 +60,7 @@ const signup = async (req, res) => {
                 message: msg.join(', '),
             });
         }
-        console.log('Signup Error:',error);
+        console.log('Signup Error:', error);
         res.status(500).json({
             sucess: false,
             message: 'Server error.',
@@ -68,59 +71,61 @@ const signup = async (req, res) => {
 
 // Part B: Login Control
 
-const login = async(req,res) =>{
-    try{
-        const {email, password} = req.body;
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-        if(!email || !password) {
+        if (!email || !password) {
             return res.status(400).json({
-                success:false,
+                success: false,
                 message: 'Please provide email and password.',
             });
         }
 
         //Must use .select('+password') because we set select :false in the schema 
         const user = await User.findOne({
-            email:email.toLowerCase()
+            email: email.toLowerCase()
         }).select('+password');
 
         if (!user) {
             return res.status(401).json({
-                success:false,
-                message:'Invalid email or password.',
+                success: false,
+                message: 'Invalid email or password.',
             });
         }
 
-        if (user.status === 'inactive'){
+        if (user.status === 'inactive') {
             return res.status(403).json({
-                seccess:false,
-                message:'Account deactivated. Contact Admin.'
+                seccess: false,
+                message: 'Account deactivated. Contact Admin.'
 
             });
         }
 
         const isMatch = await user.comparePassword(password);
-        if(!isMatch) {
+        if (!isMatch) {
             return res.status(401).json({
-                success:false,
-                message:'Invalid email and password.',
+                success: false,
+                message: 'Invalid email and password.',
             });
         }
 
         user.lastLogin = new Date();
-        await user.save({ validateBeforeSave:false});
+        await user.save({ validateBeforeSave: false });
 
-        const token = generateToken(user._id,user.role);
+        const token = generateToken(user._id, user.role, user.tokenVersion);
 
         res.status(200).json({
-            success:true,
-            message:'Login successful.',
-            data:{
+            success: true,
+            message: 'Login successful.',
+            data: {
                 token,
                 user: {
-                    _id: user._id, 
+                    _id: user._id,
                     firstName: user.firstName,
+                    lastName: user.lastName,
                     email: user.email,
+                    role: user.role,
                     lastLogin: user.lastLogin,
                 },
             },
@@ -130,8 +135,8 @@ const login = async(req,res) =>{
             success: false,
             message: 'Server error',
         });
-        return console.log('Server Error',error);
+        return console.log('Server Error', error);
     }
 };
 
-module.exports = {signup, login};
+module.exports = { signup, login };

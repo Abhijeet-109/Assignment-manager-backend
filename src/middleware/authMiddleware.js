@@ -1,35 +1,41 @@
-const {verifyToken} = require('../utils/tokenUtils');
+const { verifyToken } = require('../utils/tokenUtils');
+const User = require('../models/User');
 
-const protect = (req,res,next)=>{
-    try{
-
-        //1. This code will check the authorization header exist 
+const protect = async (req, res, next) => {
+    try {
         const authHeader = req.headers['authorization'];
-        if(!authHeader || !authHeader.startsWith('Bearer')){
+
+        if (!authHeader || !authHeader.startsWith('Bearer')) {
             return res.status(401).json({
                 success: false,
-                message: 'Access denied. No token provided.',
+                message: 'Access denied. No token provided.'
             });
         }
 
-        //2. This block will extract token (remove 'bearer'prefix)
         const token = authHeader.split(' ')[1];
-
-        //3. This will verify and decode.
         const decoded = verifyToken(token);
 
-        //4.Attach user inof to the request 
-        req.user = decoded;
+        const user = await User.findById(decoded._id).select('_id role firstName email tokenVersion');
 
+        const dbVersion = user?.tokenVersion ?? 0;
+        const tokenV = decoded.tokenVersion ?? -1; // old tokens without version get -1
+
+        if (!user || dbVersion !== tokenV) {
+            return res.status(401).json({
+                success: false,
+                message: 'Session expired. Please login again.'
+            });
+        }
+
+        req.user = user;
         next();
-    }catch (error){
+
+    } catch (error) {
         return res.status(401).json({
             success: false,
-            message: 'Invalid or expired token. Please login again',
+            message: 'Invalid or expired token. Please login again.'
         });
-        
     }
-    
 };
 
-module.exports = {protect};
+module.exports = { protect };
