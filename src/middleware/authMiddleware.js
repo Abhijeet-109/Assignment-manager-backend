@@ -15,7 +15,7 @@ const protect = async (req, res, next) => {
         const token = authHeader.split(' ')[1];
         const decoded = verifyToken(token);
 
-        const user = await User.findById(decoded._id).select('_id role firstName email tokenVersion');
+        const user = await User.findById(decoded._id).select('_id role firstName lastName email tokenVersion');
 
         const dbVersion = user?.tokenVersion ?? 0;
         const tokenV = decoded.tokenVersion ?? -1; // old tokens without version get -1

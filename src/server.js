@@ -16,6 +16,7 @@ const studentAssignmentRoutes = require('./routes/studentAssignmentRoutes');
 const selfUploadRoutes = require('./routes/selfUploadRoutes');
 const exportRoutes = require('./routes/exportRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 
 const app = express();
@@ -61,6 +62,9 @@ app.use('/api/self-uploads', selfUploadRoutes);
 
 // Dashboard routes for all 3 users 
 app.use('/api/dashboard', dashboardRoutes);
+
+// User routes api 
+app.use('/api/users', userRoutes);
 
 
 /*----------------------------------Rest API routes ends----------------------------------------- */
