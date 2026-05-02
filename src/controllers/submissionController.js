@@ -47,7 +47,7 @@ const getMySubmission = async (req, res) => {
         console.log('Type:', typeof req.user._id);
 
         const submissions = await Submission.find({ submittedBy: new mongoose.Types.ObjectId(req.user._id) })
-            .populate('assignmentId', 'title subject dueDate');
+            .populate('assignmentId', 'title subject dueDate isLate');
 
         return res.status(200).json({
             success: true,
@@ -69,7 +69,7 @@ const getSubmissionForAssignment = async (req, res) => {
     try {
         const { assignmentId } = req.params;
 
-        const submissions = await Submission.find({ assignmentId }).populate('submittedBy', 'name email');
+        const submissions = await Submission.find({ assignmentId }).populate('submittedBy', 'firstName lastName email');
         return res.status(200).json({
             success: true,
             count: submissions.length,
@@ -119,7 +119,7 @@ const updateSubmissionStatus = async (req, res) => {
 
 const getAllSubmission = async (req, res) => {
     try {
-        const submission = await Submission.find({}).populate('submittedBy', 'name email').populate('assignmentId', 'title subject dueDate');
+        const submission = await Submission.find({}).populate('submittedBy', 'firstName lastName email').populate('assignmentId', 'title subject dueDate isLate');
 
         return res.status(200).json({
             success: true,

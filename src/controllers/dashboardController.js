@@ -8,12 +8,11 @@ const StudentAssignment = require('../models/StudentAssignment');
 
 // ADMIN DASHBOARD
 // GET /api/dashboard/admin
-// Access: Admin only
 const getAdminDashboard = async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
-        const totalStudents = await Student.countDocuments();
-        const totalTeachers = await Teacher.countDocuments();
+        const totalStudents = await User.countDocuments({ role: 'student' });
+        const totalTeachers = await User.countDocuments({ role: 'teacher' });
         const totalAssignments = await Assignment.countDocuments();
         const activeAssignments = await Assignment.countDocuments({ status: 'active' });
         const totalSubmissions = await Submission.countDocuments();
@@ -22,48 +21,47 @@ const getAdminDashboard = async (req, res) => {
         res.status(200).json({
             success: true,
             data: {
-                users: {
-                    total: totalUsers,
-                    students: totalStudents,
-                    teachers: totalTeachers
-                },
-
-                assignments: {
-                    total: totalAssignments,
-                    active: activeAssignments
-                },
-
-                submissions: {
-                    total: totalSubmissions,
-                    pending: pendingSubmissions,
-                    graded: gradedSubmissions
-                },
+                users: { total: totalUsers, students: totalStudents, teachers: totalTeachers },
+                assignments: { total: totalAssignments, active: activeAssignments },
+                submissions: { total: totalSubmissions, pending: pendingSubmissions, graded: gradedSubmissions },
             },
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
 // TEACHER DASHBOARD
-// GET /api/dashboard/teacher
-// Access: Teacher only
+// GET /api/dashboard/teacher?division=A
+// division param is optional — if omitted, returns all divisions (default behaviour)
 const getTeacherDashboard = async (req, res) => {
     try {
-        // Teacher's assignments = createdBy matches logged-in user's _id
-        const myAssignments = await Assignment.find({ createdBy: req.user._id })
-            .select('title status dueDate maxMarks')
+        const { division } = req.query;
+
+        // Base filter: always this teacher's assignments
+        const assignmentFilter = { createdBy: req.user._id };
+
+        // Division filter:
+        // If teacher selects "Div A", we want assignments targeting 'A' OR 'All'
+        // If no division selected, no extra filter needed
+        if (division && division !== '') {
+            assignmentFilter.$or = [
+                { targetDivisions: division },
+                { targetDivisions: 'All' }
+            ];
+        }
+
+        const myAssignments = await Assignment.find(assignmentFilter)
+            .select('title status dueDate maxMarks targetDivisions')
             .sort({ createdAt: -1 });
 
         const myAssignmentIds = myAssignments.map(a => a._id);
 
-        // Submissions for teacher's assignments
+        // Count submissions only for this filtered assignment set
         const totalSubmissions = await Submission.countDocuments({ assignmentId: { $in: myAssignmentIds } });
         const pendingReview = await Submission.countDocuments({ assignmentId: { $in: myAssignmentIds }, status: 'pending' });
         const gradedSubmissions = await Submission.countDocuments({ assignmentId: { $in: myAssignmentIds }, status: 'graded' });
+
         res.status(200).json({
             success: true,
             data: {
@@ -77,33 +75,20 @@ const getTeacherDashboard = async (req, res) => {
             },
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
 
 // STUDENT DASHBOARD
 // GET /api/dashboard/student
-// Access: Student only
-
 const getStudentDashboard = async (req, res) => {
     try {
-        // Find student profile from logged-in user
         const student = await Student.findOne({ userId: req.user._id });
-
         if (!student) {
-
-            return res.status(404).json({
-                success: false,
-                message: 'Student profile not found'
-            });
+            return res.status(404).json({ success: false, message: 'Student profile not found' });
         }
 
-
-        // Get all junction records for this student
         const records = await StudentAssignment.find({ studentId: student._id })
             .populate('assignmentId', 'title dueDate maxMarks status')
             .populate('submissionId', 'status obtainedMarks isLate');
@@ -112,24 +97,14 @@ const getStudentDashboard = async (req, res) => {
         const submitted = records.filter(r => r.status === 'submitted').length;
         const pending = records.filter(r => r.status === 'pending').length;
         const late = records.filter(r => r.status === 'late').length;
+
         res.status(200).json({
             success: true,
-            data: {
-                summary: { total, submitted, pending, late },
-                assignments: records,
-            },
+            data: { summary: { total, submitted, pending, late }, assignments: records },
         });
-
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-module.exports = {
-    getAdminDashboard,
-    getTeacherDashboard,
-    getStudentDashboard
-};
+module.exports = { getAdminDashboard, getTeacherDashboard, getStudentDashboard };

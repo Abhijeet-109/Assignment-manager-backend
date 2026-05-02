@@ -4,26 +4,26 @@ const assignmentSchema = new mongoose.Schema(
     {
         title: {
             type: String,
-            required: [true,'Assignment title is required'],
+            required: [true, 'Assignment title is required'],
             trim: true,
         },
 
         description: {
             type: String,
-            required: [true,'Assignment description is required'],
+            required: [true, 'Assignment description is required'],
         },
 
         subject: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Subject',
-            required: [true,'Subject is required'],
+            required: [true, 'Subject is required'],
         },
 
         dueDate: {
             type: Date,
-            required: [true,'Due date is required'],
+            required: [true, 'Due date is required'],
         },
-        
+
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
@@ -40,13 +40,23 @@ const assignmentSchema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: ['active','closed'],
-            default: 'active',  
+            enum: ['active', 'closed'],
+            default: 'active',
+        },
+        fileUrl: {
+            type: String,
+            default: null,
+        },
+        // For teacher to sort by division 
+        targetDivisions: {
+            type: [String],
+            enum: ['A', 'B', 'C', 'All'],
+            default: ['All'],
         },
 
     },
-    {timestamps:true}
+    { timestamps: true }
 );
 
-const Assignment = mongoose.model('Assignment',assignmentSchema);
+const Assignment = mongoose.model('Assignment', assignmentSchema);
 module.exports = Assignment;

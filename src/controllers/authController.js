@@ -1,42 +1,46 @@
 //Part A : Signup 
+//Part A : Signup 
 const User = require('../models/User');
+const Student = require('../models/Student');
 const { generateToken } = require('../utils/tokenUtils');
 
 const signup = async (req, res) => {
     try {
-        const { firstName, lastName, email, password, role } = req.body;
+        const { firstName, lastName, email, password,
+            enrollmentNumber, division, semester, department
+        } = req.body;
 
-        //1. validating the reqired fields 
-
+        // 1. Base field validation
         if (!firstName || !lastName || !email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Please provide required information'
-            });
+            return res.status(400).json({ success: false, message: 'Please provide all required fields.' });
         }
 
-        //2. Check if email is already registered 
+        // 2. Student profile fields validation
+        if (!enrollmentNumber || !division || !semester || !department) {
+            return res.status(400).json({ success: false, message: 'Enrollment number, division, semester and department are required.' });
+        }
+
+        // 3. Duplicate email check
         const exist = await User.findOne({ email: email.toLowerCase() });
-
         if (exist) {
-            return res.status(400).json({
-                success: false,
-                message: 'Email is already registered,',
-            });
+            return res.status(400).json({ success: false, message: 'Email is already registered.' });
         }
 
-        //3. Create user - password is hashed by the pre-save hook
-        const user = await User.create({
-            firstName, lastName, email,
-            password,
-            role: role || 'student'
+        // 4. Create User (role is always student from register form)
+        const user = await User.create({ firstName, lastName, email, password, role: 'student' });
+
+        // 5. Create Student profile linked to this user
+        await Student.create({
+            userId: user._id,
+            enrollmentNumber: enrollmentNumber.toUpperCase(),
+            division,
+            semester: Number(semester),
+            department,
         });
 
-        //4. Generate Token 
+        // 6. Generate token and respond
         const token = generateToken(user._id, user.role, user.tokenVersion);
 
-        //5. Respond - never include password
-        // New data frames 
         res.status(201).json({
             success: true,
             message: 'Account created successfully.',
@@ -52,22 +56,20 @@ const signup = async (req, res) => {
                 },
             },
         });
+
     } catch (error) {
         if (error.name === 'ValidationError') {
             const msg = Object.values(error.errors).map(e => e.message);
-            return res.status(400).json({
-                success: false,
-                message: msg.join(', '),
-            });
+            return res.status(400).json({ success: false, message: msg.join(', ') });
+        }
+        // Handle duplicate enrollment number
+        if (error.code === 11000) {
+            return res.status(400).json({ success: false, message: 'Enrollment number already exists.' });
         }
         console.log('Signup Error:', error);
-        res.status(500).json({
-            sucess: false,
-            message: 'Server error.',
-        });
+        res.status(500).json({ success: false, message: 'Server error.' });
     }
 };
-
 
 // Part B: Login Control
 

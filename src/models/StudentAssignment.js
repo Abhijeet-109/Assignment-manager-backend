@@ -17,7 +17,7 @@ const stdAssignSchema = new mongoose.Schema(
         submissionId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Submission',
-            required: [true, 'Submission ID is required'],
+            default: null,  
         },
 
         status: {
@@ -36,5 +36,5 @@ const stdAssignSchema = new mongoose.Schema(
 
 stdAssignSchema.index({ studentId: 1, assignmentId: 1, }, { unique: true });
 
-const StudentAssignment = mongoose.model('StudentAssignment',stdAssignSchema);
+const StudentAssignment = mongoose.model('StudentAssignment', stdAssignSchema);
 module.exports = StudentAssignment;
