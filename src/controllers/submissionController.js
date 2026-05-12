@@ -6,31 +6,89 @@ const mongoose = require('mongoose');
 
 const submitAssignment = async (req, res) => {
     try {
-        const { assignmentId, file } = req.body;
+        const { assignmentId } = req.body;
+
+        if (!assignmentId) {
+            return res.status(400).json({
+                success: false,
+                message: 'assignmentId is required'
+            });
+        }
+
         const assignment = await Assignment.findById(assignmentId);
 
         if (!assignment) {
             return res.status(404).json({
                 success: false,
-                message: 'Assignment not found',
+                message: 'Assignment not found'
             });
         }
-        // Calculate isLate 
+
+        // Check if already submitted
+        const existing = await Submission.findOne({
+            submittedBy: req.user._id,
+            assignmentId,
+        });
+
+        if (existing && existing.status !== 'rework') {
+            return res.status(400).json({
+                success: false,
+                message: 'You have already submitted this assignment'
+            });
+        }
+
         const now = new Date();
         const isLate = now > assignment.dueDate;
-        // creating the submission document 
+
+        // File handling — multer puts file info in req.file
+        let fileData = null;
+
+        if (req.file) {
+            fileData = {
+                fileUrl: `/uploads/${req.file.filename}`,
+                fileName: req.file.originalname,
+                fileType: req.file.mimetype,
+            };
+
+        } else if (req.body.fileUrl) {
+            // Fallback: URL submission
+            fileData = {
+                fileUrl: req.body.fileUrl,
+                fileName: req.body.fileName || 'submission',
+                fileType: req.body.fileType || 'link',
+            };
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'No file or URL provided'
+            });
+        }
+
         const submission = await Submission.create({
             submittedBy: req.user._id,
             assignmentId,
-            file,
+            file: fileData,
             submittedAt: now,
             isLate,
         });
+
+        // Update StudentAssignment status
+        const StudentAssignment = require('../models/StudentAssignment');
+        const Student = require('../models/Student');
+        const student = await Student.findOne({ userId: req.user._id });
+
+        if (student) {
+            await StudentAssignment.findOneAndUpdate(
+                { studentId: student._id, assignmentId },
+                { submissionId: submission._id, status: isLate ? 'late' : 'submitted' }
+            );
+        }
 
         return res.status(201).json({
             success: true,
             data: submission
         });
+
     } catch (error) {
         return res.status(500).json({
             success: false,
@@ -184,7 +242,9 @@ const gradeSubmission = async (req, res) => {
         await Notification.create({
             userId: submission.submittedBy,
             type: 'grade',
-            message: `Your submission for "${submission.assignmentId.title}" has been graded`,
+            message: newStatus === 'rework'
+                ? `Your submission for "${submission.assignmentId.title}" needs rework`
+                : `Your submission for "${submission.assignmentId.title}" has been graded`,
             relatedAssignment: submission.assignmentId._id,
         });
 
@@ -337,7 +397,7 @@ const getAssignmentGrades = async (req, res) => {
             });
         }
 
-        const submissions = await Submission.find({assignmentId}).populate('submittedBy', 'name email rollNumber').sort({ submittedAt: -1 });
+        const submissions = await Submission.find({ assignmentId }).populate('submittedBy', 'name email rollNumber').sort({ submittedAt: -1 });
 
         //calculating stats 
 
@@ -369,13 +429,13 @@ const getAssignmentGrades = async (req, res) => {
             },
             data: submissions,
         });
-    } catch (error){
+    } catch (error) {
         console.log('Error in getAssignmentGrades:', error);
-         return res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: 'Server error while fetching assignment grades',
             error: error.message,
-         });
+        });
     }
 };
 

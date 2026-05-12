@@ -10,8 +10,19 @@ const createAssignment = async (req, res) => {
     try {
         const { title, description, subject, dueDate, maxMarks, fileUrl, targetDivisions } = req.body;
 
-        // 1. Normalize divisions — default to ['All'] if not provided
-        const divisions = targetDivisions?.length ? targetDivisions : ['All'];
+        // File handling Logic 
+        // Handle file upload vs URL
+        let resolvedFileUrl = fileUrl || null;
+        if (req.file) {
+            resolvedFileUrl = `/uploads/${req.file.filename}`;
+        }
+
+
+        // 1. Parse targetDivisions (comes as JSON string when sent via FormData)
+        const parsedDivisions = typeof targetDivisions === 'string'
+            ? JSON.parse(targetDivisions)
+            : targetDivisions;
+        const divisions = parsedDivisions?.length ? parsedDivisions : ['All'];
 
         // 2. Create the assignment
         const assignment = await Assignment.create({
@@ -21,7 +32,7 @@ const createAssignment = async (req, res) => {
             dueDate,
             createdBy: req.user._id,
             maxMarks,
-            fileUrl: fileUrl || null,
+            fileUrl: resolvedFileUrl,
             targetDivisions: divisions,
         });
 
@@ -170,12 +181,18 @@ const deleteAssignment = async (req, res) => {
             });
 
         }
+        
         await Assignment.findByIdAndDelete(req.params.id);
+
+        // Clean up related records
+        await StudentAssignment.deleteMany({ assignmentId: req.params.id });
+        await Submission.deleteMany({ assignmentId: req.params.id });
 
         return res.status(200).json({
             success: true,
             message: 'Assignment deleted successfully.',
         });
+
     } catch (error) {
         return res.status(500).json({
             success: false,

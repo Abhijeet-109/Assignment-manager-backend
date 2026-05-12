@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const { authorizeRoles } = require('../middleware/roleMiddleware');
+const upload = require('../config/multer');
 
 
 const {
@@ -14,7 +15,10 @@ const {
 } = require('../controllers/assignmentController');
 
 // API for techer creating assignment post method 
-router.post('/',protect, authorizeRoles('teacher'), createAssignment);
+// router.post('/',protect, authorizeRoles('teacher'), createAssignment);
+
+// Single file Upload for teacher 
+router.post('/', protect, authorizeRoles('teacher'), upload.single('file'), createAssignment);
     
 // Admin views all assignment API get method 
 router.get('/',protect, authorizeRoles('admin'),getAllAssignment);

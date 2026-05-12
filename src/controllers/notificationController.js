@@ -143,6 +143,25 @@ const deleteNotification = async (req, res) => {
 };
 
 
+// Delete all the read notifications 
+
+// Delete all read notifications — Bulk
+
+const deleteAllRead = async (req, res) => {
+    try {
+        await Notification.deleteMany({ userId: req.user._id, isRead: true });
+        return res.status(200).json({
+            success: true,
+            message: 'All read notifications deleted',
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 // Module exporting 
 
 module.exports = {
@@ -151,4 +170,5 @@ module.exports = {
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    deleteAllRead
 };

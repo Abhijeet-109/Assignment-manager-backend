@@ -65,8 +65,7 @@ const getMyAssignment = async (req, res) => {
             });
         }
 
-        const records = await StudentAssignment.find({ studentId: student._id }).populate('assignmentId', 'title description dueDate maxMarks status subject').populate('submissionId', 'fileUrl submittedAt');
-
+        const records = await StudentAssignment.find({ studentId: student._id }).populate('assignmentId', 'title description dueDate maxMarks status subject fileUrl').populate('submissionId', 'file fileUrl submittedAt obtainedMarks status isLate');
         return res.status(200).json({
             success: true,
             message: 'Assignments fetched',
@@ -122,7 +121,7 @@ const markAsViewed = async (req, res) => {
 
 const getStudentForAssignment = async (req, res) => {
     try {
-        const records = await StudentAssignment.find({ assignmentId: req.params.assignmentId }).populate('studentId', 'enrollmentNumber semester department division').populate('submissionId', 'fileUrl submittedAt');
+        const records = await StudentAssignment.find({ studentId: student._id }).populate('assignmentId', 'title description dueDate maxMarks status subject fileUrl').populate('submissionId', 'file fileUrl submittedAt obtainedMarks status isLate');
 
         return res.status(200).json({
             success: true,
