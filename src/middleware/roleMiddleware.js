@@ -11,4 +11,11 @@ const authorizeRoles = (...roles) =>{
     };
 }
 
-module.exports = { authorizeRoles};
+const requireSuperAdmin = (req, res, next) => {
+    if (!req.user.isSuperAdmin) {
+        return res.status(403).json({ success: false, message: 'Super Admin access required.' });
+    }
+    next();
+};
+
+module.exports = { authorizeRoles, requireSuperAdmin};

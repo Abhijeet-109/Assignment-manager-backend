@@ -8,7 +8,7 @@ const { getAllUsers,
     createStudent,
     createAdmin } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
-const { authorizeRoles } = require('../middleware/roleMiddleware');
+const { authorizeRoles, requireSuperAdmin } = require('../middleware/roleMiddleware');
 
 router.use(protect, authorizeRoles('admin'));
 
@@ -21,7 +21,10 @@ router.patch('/:id/toggle-status', toggleUserStatus);
 router.post('/create-teacher', createTeacher);
 
 
-router.post('/create-admin',   createAdmin);
 router.post('/create-student', createStudent);
+
+// Path only for Super Admin 
+router.post('/create-admin', requireSuperAdmin, createAdmin);  
+
 
 module.exports = router;

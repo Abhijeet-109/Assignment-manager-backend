@@ -41,7 +41,7 @@ const createSubject = async (req, res) => {
 
 const getAllSubjects = async (req, res) => {
     try {
-        const subjects = await Subject.find().populate('createdBy', 'name emaul').sort({ createdAt: -1 });
+        const subjects = await Subject.find().populate('createdBy', 'name email').sort({ createdAt: -1 });
         return res.status(200).json({
             success: true,
             count: subjects.length,

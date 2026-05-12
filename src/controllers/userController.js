@@ -37,16 +37,41 @@ const updateUserRole = async (req, res) => {
 // DELETE /api/users/:id — Admin only
 const deleteUser = async (req, res) => {
     try {
-        // Self-delete protection — req.user is set by authMiddleware
+
         if (req.params.id === req.user._id.toString()) {
-            return res.status(403).json({ success: false, message: 'You cannot delete your own account.' });
+            return res.status(403).json({
+                success: false,
+                message: 'You cannot delete your own account.'
+            });
         }
 
-        const user = await User.findByIdAndDelete(req.params.id);
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-        res.status(200).json({ success: true, message: 'User deleted' });
+        // NEW: Prevent deleting Super Admin
+        const target = await User.findById(req.params.id);
+
+        if (!target) return res.status(404).json({
+            success: false,
+            message: 'User not found'
+        });
+
+        if (target.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: 'Cannot delete a Super Admin account.'
+            });
+        }
+
+        await User.findByIdAndDelete(req.params.id);
+
+        res.status(200).json({
+            success: true,
+            message: 'User deleted'
+        });
+
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 };
 
@@ -54,12 +79,26 @@ const deleteUser = async (req, res) => {
 const toggleUserStatus = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+        if (!user) return res.status(404).json({
+            success: false,
+            message: 'User not found'
+        });
+
         user.isActive = !user.isActive;
+
         await user.save();
-        res.status(200).json({ success: true, data: { user } });
+
+        res.status(200).json({
+            success: true,
+            data: { user }
+        });
+
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 };
 
