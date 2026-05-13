@@ -12,15 +12,15 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    const allowed = ['.pdf', '.doc', '.docx', '.png', '.jpg', '.jpeg', '.zip', '.txt'];
+    const allowed = ['.pdf', '.doc', '.docx', '.png', '.jpg', '.jpeg', '.zip', '.txt', '.xlsx', '.xls', '.pptx', '.csv'];
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowed.includes(ext)) cb(null, true);
-    else cb(new Error('File type not allowed'), false);
+    else cb(new Error(`File type "${ext}" is not allowed`), false);
 };
 
 const upload = multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    limits: { fileSize: 15 * 1024 * 1024 }, 
     fileFilter,
 });
 

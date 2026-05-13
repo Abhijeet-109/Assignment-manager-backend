@@ -103,17 +103,27 @@ const getStudentDashboard = async (req, res) => {
             })
             .populate('submissionId', 'status obtainedMarks isLate');
 
-        const total = records.length;
-        const completed = records.filter(r =>
-            r.submissionId && (r.submissionId.status === 'submitted' || r.submissionId.status === 'graded')
+        // Deduplicate: keep only one record per assignmentId (latest)
+        const seen = new Set();
+        const uniqueRecords = records.filter(r => {
+            const id = r.assignmentId?._id?.toString();
+            if (!id || seen.has(id)) return false;
+            seen.add(id);
+            return true;
+        });
+
+        const total = uniqueRecords.length;
+        const completed = uniqueRecords.filter(r =>
+            r.submissionId && ['graded', 'reviewed', 'pending'].includes(r.submissionId.status) && r.submissionId.status !== 'rework'
         ).length;
+
+
         const pending = total - completed;
-        const late = records.filter(r => r.submissionId?.isLate).length;
+        const late = uniqueRecords.filter(r => r.submissionId?.isLate).length;
         const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-        // Upcoming deadlines — pending only, due in future, sorted
         const now = new Date();
-        const upcomingDeadlines = records
+        const upcomingDeadlines = uniqueRecords
             .filter(r => {
                 const isSubmitted = r.submissionId &&
                     (r.submissionId.status === 'submitted' || r.submissionId.status === 'graded');
@@ -131,7 +141,7 @@ const getStudentDashboard = async (req, res) => {
 
         // Subject progress — group by subject
         const subjectMap = {};
-        records.forEach(r => {
+        uniqueRecords.forEach(r => {
             const subId = r.assignmentId?.subject?._id?.toString();
             const subName = r.assignmentId?.subject?.name || 'Unknown';
             if (!subId) return;

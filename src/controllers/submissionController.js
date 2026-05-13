@@ -25,6 +25,7 @@ const submitAssignment = async (req, res) => {
         }
 
         // Check if already submitted
+        // Check if already submitted
         const existing = await Submission.findOne({
             submittedBy: req.user._id,
             assignmentId,
@@ -40,7 +41,7 @@ const submitAssignment = async (req, res) => {
         const now = new Date();
         const isLate = now > assignment.dueDate;
 
-        // File handling — multer puts file info in req.file
+        // File handling
         let fileData = null;
 
         if (req.file) {
@@ -51,7 +52,6 @@ const submitAssignment = async (req, res) => {
             };
 
         } else if (req.body.fileUrl) {
-            // Fallback: URL submission
             fileData = {
                 fileUrl: req.body.fileUrl,
                 fileName: req.body.fileName || 'submission',
@@ -64,13 +64,27 @@ const submitAssignment = async (req, res) => {
             });
         }
 
-        const submission = await Submission.create({
-            submittedBy: req.user._id,
-            assignmentId,
-            file: fileData,
-            submittedAt: now,
-            isLate,
-        });
+        let submission;
+
+        // ✅ KEY FIX: If rework exists, UPDATE it — don't create a new one
+        if (existing && existing.status === 'rework') {
+            existing.file = fileData;
+            existing.submittedAt = now;
+            existing.isLate = isLate;
+            existing.status = 'pending';   // reset back to pending for teacher to re-grade
+            existing.obtainedMarks = undefined;
+            existing.feedback = undefined;
+            existing.gradedAt = undefined;
+            submission = await existing.save();
+        } else {
+            submission = await Submission.create({
+                submittedBy: req.user._id,
+                assignmentId,
+                file: fileData,
+                submittedAt: now,
+                isLate,
+            });
+        }
 
         // Update StudentAssignment status
         const StudentAssignment = require('../models/StudentAssignment');
@@ -105,7 +119,11 @@ const getMySubmission = async (req, res) => {
         console.log('Type:', typeof req.user._id);
 
         const submissions = await Submission.find({ submittedBy: new mongoose.Types.ObjectId(req.user._id) })
-            .populate('assignmentId', 'title subject dueDate isLate');
+            .populate({
+                path: 'assignmentId',
+                select: 'title subject maxMarks dueDate',
+                populate: { path: 'subject', select: 'name code' }
+            });
 
         return res.status(200).json({
             success: true,

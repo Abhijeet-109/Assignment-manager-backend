@@ -1,14 +1,22 @@
 const express = require('express');
 const router = express.Router();
+
 const { getAllUsers,
     updateUserRole,
     deleteUser,
     toggleUserStatus,
     createTeacher,
     createStudent,
-    createAdmin } = require('../controllers/userController');
+    createAdmin,
+    getProfile,
+    updateProfile, } = require('../controllers/userController');
+
 const { protect } = require('../middleware/authMiddleware');
 const { authorizeRoles, requireSuperAdmin } = require('../middleware/roleMiddleware');
+
+// Profile access routes 
+router.get('/profile', protect, getProfile);
+router.put('/profile', protect, updateProfile);
 
 router.use(protect, authorizeRoles('admin'));
 
@@ -24,7 +32,10 @@ router.post('/create-teacher', createTeacher);
 router.post('/create-student', createStudent);
 
 // Path only for Super Admin 
-router.post('/create-admin', requireSuperAdmin, createAdmin);  
+router.post('/create-admin', requireSuperAdmin, createAdmin);
+
+
+
 
 
 module.exports = router;

@@ -249,6 +249,87 @@ const createStudent = async (req, res) => {
         });
     }
 };
+
+
+// GET /api/users/profile — Any authenticated user
+const getProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password -tokenVersion');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        res.status(200).json({
+            success: true,
+            data: { user }
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// PUT /api/users/profile — Any authenticated user
+const updateProfile = async (req, res) => {
+    try {
+        const { firstName, lastName, currentPassword, newPassword } = req.body;
+
+        const user = await User.findById(req.user._id).select('+password');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        // Update name fields if provided
+        if (firstName) user.firstName = firstName.trim();
+        if (lastName) user.lastName = lastName.trim();
+
+        // Password change — only if both fields provided
+        if (currentPassword && newPassword) {
+            const isMatch = await user.comparePassword(currentPassword);
+
+
+            if (!isMatch) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Current password is incorrect'
+                });
+            }
+            if (newPassword.length < 8) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'New password must be at least 8 characters'
+                });
+            }
+
+            user.password = newPassword; // pre-save hook hashes it
+        }
+
+        await user.save();
+
+        const updated = await User.findById(user._id).select('-password -tokenVersion');
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully', data: { user: updated }
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 // Add to module.exports:
 module.exports = {
     getAllUsers,
@@ -257,6 +338,8 @@ module.exports = {
     toggleUserStatus,
     createTeacher,
     createStudent,
-    createAdmin
+    createAdmin,
+    getProfile,
+    updateProfile,
 };
 

@@ -37,7 +37,7 @@ const getMySelfUploads = async (req, res) => {
         const uploads = await SelfUpload.find({
             uploadedBy: new mongoose.Types.ObjectId(req.user._id)
         }).sort({ createdAt: -1 });
-        
+
         return res.status(200).json({
             success: true,
             count: uploads.length,
@@ -121,6 +121,48 @@ const deleteSelfUpload = async (req, res) => {
     }
 };
 
+// Create self-upload via actual local file (multer)
+const createSelfUploadFile = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+
+        const { title, description, tags } = req.body;
+
+        // Build public URL for the uploaded file
+        const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        const fileName = req.file.originalname;
+        const ext = fileName.split('.').pop().toLowerCase();
+
+        const upload = await SelfUpload.create({
+            uploadedBy: req.user._id,
+            title: title || fileName,
+            description: description || '',
+            file: {
+                fileUrl,
+                fileName,
+                fileType: ext,
+            },
+            tags: tags
+                ? tags.split(',').map(t => t.trim()).filter(Boolean)
+                : [],
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: 'File uploaded and saved',
+            data: upload,
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'File upload failed',
+            error: error.message,
+        });
+    }
+};
 
 //module exporting 
 
@@ -129,5 +171,5 @@ module.exports = {
     getMySelfUploads,
     getSelfUploadById,
     deleteSelfUpload,
-
+    createSelfUploadFile,
 };
