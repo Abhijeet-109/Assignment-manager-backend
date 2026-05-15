@@ -86,6 +86,7 @@ const toggleUserStatus = async (req, res) => {
         });
 
         user.isActive = !user.isActive;
+        user.status = user.isActive ? 'active' : 'inactive';
 
         await user.save();
 
@@ -219,9 +220,18 @@ const createStudent = async (req, res) => {
 
         const user = await User.create({ firstName, lastName, email, password, role: 'student' });
 
-        await Student.create({ userId: user._id, enrollmentNumber: enrollmentNumber.toUpperCase(), division, semester: Number(semester), department });
+        try {
+            await Student.create({ userId: user._id, enrollmentNumber: enrollmentNumber.toUpperCase(), division, semester: Number(semester), department });
+        } catch (studentError) {
+            // Rollback — delete the user if student profile creation fails
+            await User.findByIdAndDelete(user._id);
+            if (studentError.code === 11000) {
+                return res.status(400).json({ success: false, message: 'Enrollment number already exists.' });
+            }
+            return res.status(400).json({ success: false, message: studentError.message });
+        }
 
-        res.status(201).json({
+       res.status(201).json({
             success: true,
             message: 'Student account created.',
             data: {
@@ -396,6 +406,6 @@ module.exports = {
     getProfile,
     updateProfile,
     updateAvatar,
-    deleteAvatar ,
+    deleteAvatar,
 };
 

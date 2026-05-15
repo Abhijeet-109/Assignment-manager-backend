@@ -20,6 +20,7 @@ const studentSchema = new mongoose.Schema(
             type: Number,
             required: [true, 'Semester is required'],
             min: [1, 'Min semester is 1'],
+            max: [4, 'Max semester is 4'],
         },
 
         department: {

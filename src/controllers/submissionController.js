@@ -178,6 +178,20 @@ const updateSubmissionStatus = async (req, res) => {
         submission.feedback = feedback || submission.feedback;
 
         await submission.save();
+
+        // Fire notification if teacher sends for rework
+        if (status === 'rework') {
+            const Notification = require('../models/Notification');
+            const Assignment = require('../models/Assignment');
+            const assignment = await Assignment.findById(submission.assignmentId);
+            await Notification.create({
+                userId: submission.submittedBy,
+                type: 'rework',
+                message: `Your submission for "${assignment?.title || 'an assignment'}" has been sent for rework`,
+                relatedAssignment: submission.assignmentId,
+            });
+        }
+
         return res.status(200).json({
             success: true,
             data: submission,
