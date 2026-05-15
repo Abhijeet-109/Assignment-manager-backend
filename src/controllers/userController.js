@@ -330,6 +330,60 @@ const updateProfile = async (req, res) => {
         });
     }
 };
+
+// PUT /api/users/profile/avatar — Any authenticated user
+const updateAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No image file uploaded' });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+        // Delete old avatar file from disk if it exists
+        if (user.avatar) {
+            const oldPath = require('path').join(__dirname, '../../../', user.avatar);
+            require('fs').unlink(oldPath, (err) => {
+                if (err) console.warn('Old avatar delete failed:', err.message);
+            });
+        }
+
+        // Save new avatar path (relative URL for serving via /uploads)
+        user.avatar = req.file.path.replace(/\\/g, '/'); // normalize Windows backslashes
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Avatar updated successfully',
+            data: { avatarUrl: user.avatar },
+        });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const deleteAvatar = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+        if (user.avatar) {
+            const oldPath = require('path').join(__dirname, '../../../', user.avatar);
+            require('fs').unlink(oldPath, (err) => {
+                if (err) console.warn('Avatar delete failed:', err.message);
+            });
+        }
+
+        user.avatar = null;
+        await user.save();
+
+        res.status(200).json({ success: true, message: 'Avatar removed' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
 // Add to module.exports:
 module.exports = {
     getAllUsers,
@@ -341,5 +395,7 @@ module.exports = {
     createAdmin,
     getProfile,
     updateProfile,
+    updateAvatar,
+    deleteAvatar ,
 };
 

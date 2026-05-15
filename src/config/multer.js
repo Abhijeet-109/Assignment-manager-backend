@@ -1,7 +1,11 @@
+// Path: Main/backend/src/config/multer.js
+
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-const storage = multer.diskStorage({
+// ── Submission upload (PDFs, docs, etc.) ──────────────────────────
+const submissionStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/');
     },
@@ -11,7 +15,7 @@ const storage = multer.diskStorage({
     },
 });
 
-const fileFilter = (req, file, cb) => {
+const submissionFilter = (req, file, cb) => {
     const allowed = ['.pdf', '.doc', '.docx', '.png', '.jpg', '.jpeg', '.zip', '.txt', '.xlsx', '.xls', '.pptx', '.csv'];
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowed.includes(ext)) cb(null, true);
@@ -19,9 +23,38 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-    storage,
-    limits: { fileSize: 15 * 1024 * 1024 }, 
-    fileFilter,
+    storage: submissionStorage,
+    limits: { fileSize: 15 * 1024 * 1024 },
+    fileFilter: submissionFilter,
 });
 
-module.exports = upload;
+// ── Avatar upload (images only) ───────────────────────────────────
+const avatarDir = 'uploads/avatars';
+if (!fs.existsSync(avatarDir)) {
+    fs.mkdirSync(avatarDir, { recursive: true });
+}
+
+const avatarStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, avatarDir);
+    },
+    filename: (req, file, cb) => {
+        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, unique + path.extname(file.originalname));
+    },
+});
+
+const avatarFilter = (req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) cb(null, true);
+    else cb(new Error('Only image files (jpg, jpeg, png, webp) are allowed'), false);
+};
+
+const uploadAvatar = multer({
+    storage: avatarStorage,
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+    fileFilter: avatarFilter,
+});
+
+module.exports = { upload, uploadAvatar };

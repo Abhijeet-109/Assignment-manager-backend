@@ -9,7 +9,7 @@ const {
 } = require('../controllers/selfUploadController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorizeRoles } = require('../middleware/roleMiddleware');
-const upload = require('../config/multer');
+const { upload } = require('../config/multer');
 
 // Drive link upload (JSON body)
 router.post('/', protect, authorizeRoles('student'), createSelfUpload);

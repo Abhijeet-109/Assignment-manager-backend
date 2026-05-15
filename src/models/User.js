@@ -63,8 +63,15 @@ const UserSchema = new mongoose.Schema(
             default: true
         },
         isSuperAdmin: {
-             type: Boolean,
-              default: false },
+            type: Boolean,
+            default: false
+        },
+
+        avatar: { 
+            type: String,
+            default: null 
+        }
+
     },
     { timestamps: true }
 );

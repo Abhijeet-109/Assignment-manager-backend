@@ -145,7 +145,7 @@ const getSubmissionForAssignment = async (req, res) => {
     try {
         const { assignmentId } = req.params;
 
-        const submissions = await Submission.find({ assignmentId }).populate('submittedBy', 'firstName lastName email');
+        const submissions = await Submission.find({ assignmentId }).populate('submittedBy', 'firstName lastName email avatar');
         return res.status(200).json({
             success: true,
             count: submissions.length,
@@ -195,7 +195,7 @@ const updateSubmissionStatus = async (req, res) => {
 
 const getAllSubmission = async (req, res) => {
     try {
-        const submission = await Submission.find({}).populate('submittedBy', 'firstName lastName email').populate('assignmentId', 'title subject dueDate isLate');
+        const submission = await Submission.find({}).populate('submittedBy', 'firstName lastName email avatar').populate('assignmentId', 'title subject dueDate isLate');
 
         return res.status(200).json({
             success: true,
@@ -352,7 +352,7 @@ const getStudentGrades = async (req, res) => {
                 status: { $in: ['graded', 'rework'] },
             }
         ).populate('assignmentId', 'title subject maxMarks dueDate')
-            .populate('submittedBy', 'name email')
+            .populate('submittedBy', 'name email avatar')
             .sort({ gradedAt: -1 });
 
         if (submissions.length === 0) {
@@ -415,7 +415,7 @@ const getAssignmentGrades = async (req, res) => {
             });
         }
 
-        const submissions = await Submission.find({ assignmentId }).populate('submittedBy', 'name email rollNumber').sort({ submittedAt: -1 });
+        const submissions = await Submission.find({ assignmentId }).populate('submittedBy', 'firstName lastName email avatar').sort({ submittedAt: -1 });
 
         //calculating stats 
 
