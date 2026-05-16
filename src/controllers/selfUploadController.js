@@ -131,7 +131,7 @@ const createSelfUploadFile = async (req, res) => {
         const { title, description, tags } = req.body;
 
         // Build public URL for the uploaded file
-        const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        const fileUrl = req.file.secure_url || req.file.path;
         const fileName = req.file.originalname;
         const ext = fileName.split('.').pop().toLowerCase();
 

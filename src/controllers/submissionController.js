@@ -1,6 +1,8 @@
 const Submission = require('../models/Submission');
 const Assignment = require('../models/Assignment');
 const mongoose = require('mongoose');
+const { cloudinary } = require('../config/multer');
+
 
 // 1. Submit Assignment and calculating the dueDate - Student Only 
 
@@ -45,12 +47,15 @@ const submitAssignment = async (req, res) => {
         let fileData = null;
 
         if (req.file) {
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                folder: 'assignly/submissions',
+                resource_type: 'auto',
+            });
             fileData = {
-                fileUrl: `/uploads/${req.file.filename}`,
+                fileUrl: result.secure_url,
                 fileName: req.file.originalname,
                 fileType: req.file.mimetype,
             };
-
         } else if (req.body.fileUrl) {
             fileData = {
                 fileUrl: req.body.fileUrl,

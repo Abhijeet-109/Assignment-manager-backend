@@ -3,6 +3,8 @@ const Submission = require('../models/Submission');
 const Student = require('../models/Student');
 const StudentAssignment = require('../models/StudentAssignment');
 const Notification = require('../models/Notification');
+const { cloudinary } = require('../config/multer');
+
 
 
 // 1. Creating the assignment for Teacher Only 
@@ -14,9 +16,12 @@ const createAssignment = async (req, res) => {
         // Handle file upload vs URL
         let resolvedFileUrl = fileUrl || null;
         if (req.file) {
-            resolvedFileUrl = `/uploads/${req.file.filename}`;
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                folder: 'assignly/assignments',
+                resource_type: 'auto',
+            });
+            resolvedFileUrl = result.secure_url;
         }
-
 
         // 1. Parse targetDivisions (comes as JSON string when sent via FormData)
         const parsedDivisions = typeof targetDivisions === 'string'
@@ -181,7 +186,7 @@ const deleteAssignment = async (req, res) => {
             });
 
         }
-        
+
         await Assignment.findByIdAndDelete(req.params.id);
 
         // Clean up related records
