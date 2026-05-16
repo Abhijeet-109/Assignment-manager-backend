@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
+const { cloudinary } = require('../config/multer');
+
 
 const bcrypt = require('bcryptjs');
 
@@ -231,7 +233,7 @@ const createStudent = async (req, res) => {
             return res.status(400).json({ success: false, message: studentError.message });
         }
 
-       res.status(201).json({
+        res.status(201).json({
             success: true,
             message: 'Student account created.',
             data: {
@@ -351,22 +353,28 @@ const updateAvatar = async (req, res) => {
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-        // Delete old avatar file from disk if it exists
-        if (user.avatar) {
-            const oldPath = require('path').join(__dirname, '../../../', user.avatar);
-            require('fs').unlink(oldPath, (err) => {
-                if (err) console.warn('Old avatar delete failed:', err.message);
-            });
+        const { cloudinary } = require('../config/multer');
+
+        // Delete old avatar from Cloudinary if exists
+        if (user.avatarPublicId) {
+            await cloudinary.uploader.destroy(user.avatarPublicId);
         }
 
-        // Save new avatar path (relative URL for serving via /uploads)
-        user.avatar = req.file.path.replace(/\\/g, '/'); // normalize Windows backslashes
+        // Upload new avatar to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'assignly/avatars',
+            resource_type: 'image',
+            transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }],
+        });
+
+        user.avatar = result.secure_url;
+        user.avatarPublicId = result.public_id;
         await user.save();
 
         res.status(200).json({
             success: true,
             message: 'Avatar updated successfully',
-            data: { avatarUrl: user.avatar },
+            data: { avatarUrl: result.secure_url },
         });
 
     } catch (error) {
@@ -379,14 +387,11 @@ const deleteAvatar = async (req, res) => {
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-        if (user.avatar) {
-            const oldPath = require('path').join(__dirname, '../../../', user.avatar);
-            require('fs').unlink(oldPath, (err) => {
-                if (err) console.warn('Avatar delete failed:', err.message);
-            });
+        if (user.avatarPublicId) {
+            await cloudinary.uploader.destroy(user.avatarPublicId);
         }
-
         user.avatar = null;
+        user.avatarPublicId = null;
         await user.save();
 
         res.status(200).json({ success: true, message: 'Avatar removed' });

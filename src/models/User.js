@@ -67,10 +67,16 @@ const UserSchema = new mongoose.Schema(
             default: false
         },
 
-        avatar: { 
+        avatar: {
             type: String,
-            default: null 
-        }
+            default: null
+        },
+
+        avatarPublicId: {
+            type: String,
+            default: null
+        },
+
 
     },
     { timestamps: true }
