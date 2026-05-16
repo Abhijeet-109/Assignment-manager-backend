@@ -29,6 +29,9 @@ app.use(cors({
     credentials: true,
 }));
 
+app.use(express.json());      
+app.use(express.urlencoded({ extended: true }));
+
 // File handling paths for Local file uploads 
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
